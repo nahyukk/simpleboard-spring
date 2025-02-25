@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: simpleboard_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: simpleboarduser       # ✅ PostgreSQL 접속 계정
+      POSTGRES_PASSWORD: password  # ✅ 비밀번호
+      POSTGRES_DB: simpleboarddb     # ✅ 사용할 DB 이름
+    ports:
+      - "5432:5432"  # ✅ 호스트 포트와 컨테이너 포트 매핑
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # ✅ 데이터 영구 저장
+
+volumes:
+  postgres_data:
+    driver: local  # ✅ 로컬 볼륨을 사용하여 데이터 유지
