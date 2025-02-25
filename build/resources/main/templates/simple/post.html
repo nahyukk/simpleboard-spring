@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>📌 게시글 상세</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-4">
+    <section>
+        <!-- ✅ 게시글 정보 -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a th:href="@{/posts}" class="btn btn-outline-secondary">⬅ 돌아가기</a>
+            </div>
+            <div class="d-flex align-items-center">
+                <small class="text-secondary me-2">#<span th:text="${post.id}"></span></small>
+                <h2 th:text="${post.title}" class="mb-0"></h2>
+            </div>
+            <div>
+                <a th:href="@{/posts/{id}/edit(id=${post.id})}" class="btn btn-warning">✏️ 수정</a>
+                <form th:action="@{/posts/{id}/delete(id=${post.id})}" method="post" style="display: inline;">
+                    <input type="hidden" name="_method" value="delete"/>
+                    <button type="submit" class="btn btn-danger">🗑 삭제</button>
+                </form>
+            </div>
+        </div>
+
+        <hr/>
+        <p th:text="${post.content}" class="border p-3"></p>
+    </section>
+    <section>
+        <h3>💬 댓글</h3>
+
+        <!-- ✅ 댓글 입력 폼 (새 댓글 작성) -->
+        <form th:action="@{/posts/{id}/comments(id=${post.id})}" method="post" id="commentForm">
+            <div class="mb-3">
+                <textarea name="content" id="commentContent" class="form-control" placeholder="댓글 입력"
+                          required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">댓글 작성</button>
+        </form>
+
+        <hr/>
+
+        <!-- ✅ 댓글 목록 -->
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                th:each="comment : ${post.comments}" th:id="'comment-' + ${comment.id}">
+
+                <!-- ✅ 기본 상태: 댓글 내용 표시 -->
+                <span th:text="${comment.content}" th:id="'comment-text-' + ${comment.id}"></span>
+
+                <div>
+                    <!-- ✅ 수정 버튼 -->
+                    <button type="button" class="btn btn-sm btn-secondary"
+                            th:data-comment-id="${comment.id}"
+                            th:data-comment-content="${comment.content}"
+                            th:data-post-id="${post.id}"
+                            onclick="editComment(this)">
+                        ✏️ 수정
+                    </button>
+
+                    <!-- ✅ 삭제 폼 -->
+                    <form th:action="@{/posts/{postId}/comments/{commentId}/delete(postId=${post.id}, commentId=${comment.id})}"
+                          method="post" style="display: inline;">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="btn btn-sm btn-danger">🗑 삭제</button>
+                    </form>
+                </div>
+            </li>
+        </ul>
+    </section>
+</div>
+</body>
+
+<!-- ✅ 댓글 수정용 JavaScript -->
+<script th:inline="javascript">
+    function editComment(button) {
+        let commentId = button.getAttribute("data-comment-id");
+        let content = button.getAttribute("data-comment-content");
+        let postId = button.getAttribute("data-post-id");
+
+        let commentText = document.getElementById("comment-text-" + commentId);
+        let commentItem = document.getElementById("comment-" + commentId);
+
+        // ✅ 기존 댓글 숨기기
+        commentText.style.display = "none";
+
+        // ✅ 수정 폼 삽입
+        let editForm = `
+            <form action="/posts/${postId}/comments/${commentId}/edit" method="post">
+                <div class="mb-3">
+                    <textarea name="content" class="form-control">${content}</textarea>
+                </div>
+                <button type="submit" class="btn btn-success">✔ 저장</button>
+                <button type="button" class="btn btn-secondary" onclick="cancelEdit('${commentId}', '${content}', '${postId}')">취소</button>
+            </form>
+        `;
+
+        // ✅ 기존 댓글을 수정 폼으로 교체
+        commentItem.innerHTML = editForm;
+    }
+
+    // ✅ 취소 기능 추가
+function cancelEdit(commentId, content, postId) {
+    let commentItem = document.getElementById("comment-" + commentId);
+
+    // ✅ 원래 댓글 UI 복원
+    commentItem.innerHTML = `
+        <span id="comment-text-${commentId}">${content}</span>
+        <div>
+            <button type="button" class="btn btn-sm btn-secondary"
+                    data-comment-id="${commentId}"
+                    data-comment-content="${content}"
+                    data-post-id="${postId}"
+                    onclick="editComment(this)">✏️ 수정</button>
+            <form action="/posts/${postId}/comments/${commentId}/delete"
+                  method="post" style="display: inline;">
+                <input type="hidden" name="_method" value="delete" />
+                <button type="submit" class="btn btn-sm btn-danger">🗑 삭제</button>
+            </form>
+        </div>
+    `;
+}
+</script>
+</html>
