@@ -1,0 +1,4 @@
+# Gradle directory
+.gradle/
+.DS_Store
+/build/
