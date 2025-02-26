@@ -1,6 +1,7 @@
 package spring.simpleboard.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,8 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.simpleboard.dto.CommentDto;
 import spring.simpleboard.dto.PostDto;
 import spring.simpleboard.entity.Comment;
@@ -21,19 +25,35 @@ import spring.simpleboard.service.PostService;
 
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
     private final CommentService commentService;
 
-    @PostMapping("/posts")
-    public String savePost(
-            @RequestParam("title") String title,
-            @RequestParam("content") String content) {
-        PostDto postDto = new PostDto(null, title, content, List.of());
+//    @PostMapping("/posts")
+//    public String savePost(
+//            @RequestParam("title") String title,
+//            @RequestParam("content") String content) {
+//        PostDto postDto = new PostDto(null, title, content, List.of());
+//        PostDto post = postService.savePost(postDto);
+//        return "redirect:/posts/" + post.getId();
+//    }
+
+    @PostMapping("/posts/new")
+    public String savePost (@ModelAttribute @Validated PostDto postDto, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("postDto", postDto);
+            return "simple/addPost";
+        }
+
         PostDto post = postService.savePost(postDto);
-        return "redirect:/posts/" + post.getId();
+
+        redirectAttributes.addAttribute("postId", post.getId());
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/posts/{postId}";
     }
 
     @GetMapping("/posts/new")
